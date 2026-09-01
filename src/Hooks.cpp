@@ -7,6 +7,8 @@ namespace BaseObjectSwapper
 	{
 		static void __fastcall LinkFormHookREFR(TESObjectREFR* a_ref, void* edx)
 		{
+			ThisStdCall(originalAddressREFR, a_ref);
+
 			if (const auto base = a_ref->baseForm) {
 				Manager::GetSingleton()->LoadFormsOnce();
 				const auto& [swapBase, transformData] = Manager::GetSingleton()->GetSwapData(a_ref, base);
@@ -17,7 +19,8 @@ namespace BaseObjectSwapper
 					transformData->SetTransform(a_ref);
 				}
 			}
-			ThisStdCall(originalAddressREFR, a_ref);
+
+			//a_ref->Update3D();
 		}
 		static inline std::uint32_t originalAddressREFR;
 
@@ -113,11 +116,14 @@ namespace BaseObjectSwapper
 
 	void Install()
 	{
-		_MESSAGE("-HOOKS-");
-		LinkFormREFRImpl::Install();
-		//LinkFormNPCImpl::Install();
-		//LinkFormCREAImpl::Install();
-		_MESSAGE("Installed all vtable hooks");
+		if (!HooksInstalled) {
+			_MESSAGE("-HOOKS-");
+			LinkFormREFRImpl::Install();
+			//LinkFormNPCImpl::Install();
+			//LinkFormCREAImpl::Install();
+			HooksInstalled = true;
+			_MESSAGE("Installed all vtable hooks");
+		}
 
 	}
 }

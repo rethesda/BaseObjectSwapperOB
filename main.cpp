@@ -125,9 +125,10 @@ void MessageHandler(OBSEMessagingInterface::Message* msg)
 	{
 	case OBSEMessagingInterface::kMessage_PostLoad:
 		g_messagingInterface->RegisterListener(g_pluginHandle, nullptr, UnifiedMessageHandler);
+		
 		break;
 	case OBSEMessagingInterface::kMessage_PreLoadGame:
-		BaseObjectSwapper::Install();
+		BaseObjectSwapper::Manager::GetSingleton()->ResolvePendingEditorIDs();
 		break;
 	default: break;
 	}
@@ -200,7 +201,10 @@ bool OBSEPlugin_Load(OBSEInterface* OBSE)
 	
 	EditorIDMapper::Init(g_messagingInterface, g_pluginHandle);
 	KeywordAPI::Init(g_messagingInterface, g_pluginHandle);
-	
+
+	BaseObjectSwapper::HooksInstalled = false;
+
+	BaseObjectSwapper::Install();
 
 	return true;
 }

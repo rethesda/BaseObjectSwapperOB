@@ -5,6 +5,7 @@
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
+#include <vector>
 
 #include "obse/PluginAPI.h"
 #include "obse/GameAPI.h"
@@ -43,3 +44,13 @@ using FormIDOrSet = std::variant<std::uint32_t, FormIDSet>;
 
 template <class T>
 using SwapMap = std::unordered_map<std::uint32_t, T>;
+
+struct PendingEditorID {
+    std::string editorID;
+    UInt32 fakeFormID;
+    enum class MapType { Forms, Refs, Transforms } mapType;
+};
+
+std::vector<PendingEditorID> g_pendingEditorIDs;
+
+UInt32 pendingStart;

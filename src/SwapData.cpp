@@ -263,12 +263,19 @@ namespace BaseObjectSwapper
 			}
 		}
 
-		if (!EditorIDMapper::IsReady())
+		const auto form = EditorIDMapper::Lookup(a_str.c_str());
+		UInt32 pending = pendingStart;
+
+		if (!EditorIDMapper::IsReady() || !form)
 		{
-			_WARNING("EditorIDMapper not ready, cannot resolve '%s'", a_str.c_str());
-			return 0;
+			PendingEditorID pendingID = {};
+			pendingID.editorID = a_str.c_str();
+			pendingID.fakeFormID = pending;
+			g_pendingEditorIDs.push_back(pendingID);
+			pendingStart++;
+			return pending;
 		}
-		if (const auto form = EditorIDMapper::Lookup(a_str.c_str())) {
+		else {
 			return form;
 		}
 		return 0;

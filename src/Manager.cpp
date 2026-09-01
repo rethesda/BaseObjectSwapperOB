@@ -503,6 +503,8 @@ namespace BaseObjectSwapper
 	{
 		_MESSAGE("-INI-");
 
+		pendingStart = 0xFFFFFF00;
+
 		std::string bosFolderPath = R"(Data\OBSE\Plugins\BaseObjectSwapper)";
 
 		const std::filesystem::path bosFolder{ bosFolderPath };
@@ -716,6 +718,62 @@ namespace BaseObjectSwapper
 	{
 		return swappedLeveledItemRefs.contains(a_refr->refID);
 	}
+
+	void Manager::ResolvePendingEditorIDs()
+	{
+		for (auto& pending : g_pendingEditorIDs)
+		{
+			UInt32 realFormID = EditorIDMapper::Lookup(pending.editorID.c_str());
+			if (!realFormID) {
+				_WARNING("Failed to resolve EditorID %s", pending.editorID.c_str());
+				continue;
+			}
+
+			SwapMap<SwapDataVec>* targetMap = nullptr;
+			SwapMap<TransformDataVec>* transformMap = nullptr;
+			switch (pending.mapType) {
+			case PendingEditorID::MapType::Forms: targetMap = &swapForms; break;
+			case PendingEditorID::MapType::Refs: targetMap = &swapRefs; break;
+			case PendingEditorID::MapType::Transforms: transformMap = &transforms; break;
+			}
+
+			if (!targetMap && transformMap) {
+				auto it = transformMap->find(pending.fakeFormID);
+				if (it == transformMap->end()) {
+					_WARNING("fakeFormID %08X not found in map", pending.fakeFormID);
+					continue;
+				}
+
+				auto& vec = it->second;
+				auto& dest = (*transformMap)[realFormID];
+				dest.insert(dest.end(),
+					std::make_move_iterator(vec.begin()),
+					std::make_move_iterator(vec.end()));
+				transformMap->erase(it);
+			}
+			else if (!targetMap && !transformMap) {
+				continue;
+			}
+			else {
+				auto it = targetMap->find(pending.fakeFormID);
+				if (it == targetMap->end()) {
+					_WARNING("fakeFormID %08X not found in map", pending.fakeFormID);
+					continue;
+				}
+
+				auto& vec = it->second;
+				auto& dest = (*targetMap)[realFormID];
+				dest.insert(dest.end(),
+					std::make_move_iterator(vec.begin()),
+					std::make_move_iterator(vec.end()));
+				targetMap->erase(it);
+			}
+		}
+
+		g_pendingEditorIDs.clear();
+	}
+
+
 
 	SwapResult Manager::GetSwapData(TESObjectREFR* a_ref, TESForm* a_base)
 	{

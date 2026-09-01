@@ -44,6 +44,8 @@ namespace BaseObjectSwapper
 		void InsertLeveledItemRef(const TESObjectREFR* a_refr);
 		bool IsLeveledItemRefSwapped(const TESObjectREFR* a_refr) const;
 
+		void ResolvePendingEditorIDs();
+
 	private:
 		Manager() = default;
 		~Manager() = default;
